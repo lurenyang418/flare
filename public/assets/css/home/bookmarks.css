@@ -9,9 +9,16 @@
   font-weight: 400;
 }
 
+#container-bookmakrs .bookmark-groups {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  column-gap: 34px;
+  row-gap: 22px;
+  align-items: start;
+}
+
 #container-bookmakrs .bookmark-group-container {
-  display: inline-block;
-  width: 19.99%;
+  min-width: 0;
 }
 
 #container-bookmakrs .bookmark-group-container h3 {
@@ -65,8 +72,8 @@
 }
 
 @media (max-width: 767px) {
-  #container-bookmakrs .bookmark-group-container {
-    width: 30%;
-    float: none;
+  #container-bookmakrs .bookmark-groups {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 18px;
   }
 }

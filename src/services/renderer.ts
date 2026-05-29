@@ -259,7 +259,7 @@ export function renderHomePage(data: PageData): string {
   const bookmarksSection = data.optionShowBookmarks
     ? `<div class="plugin-container clearfix" id="container-bookmakrs">
         <h2><a href="${data.bookmarksURI}">书签</a></h2>
-        ${data.bookmarks ?? ''}
+        <div class="bookmark-groups clearfix">${data.bookmarks ?? ''}</div>
       </div>`
     : '';
 
