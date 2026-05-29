@@ -14,8 +14,6 @@ directory = "./public"
 [vars]
 ENABLE_EDITOR = "true"
 VISIBILITY = "DEFAULT"
-FLARE_USER = "flare"
-FLARE_PASS = "flare123"
 
 # FLARE_USER / FLARE_PASS - set via secrets for production
 # DISABLE_LOGIN - set to "true" to skip auth

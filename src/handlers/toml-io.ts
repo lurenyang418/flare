@@ -74,8 +74,8 @@ export async function importToml(c: Context): Promise<Response> {
 
   if (body.config) {
     try {
-      const tomlStr = typeof body.config === 'string' ? body.config : await (body.config as File).text();
-      const config = importConfigToml(tomlStr);
+      const raw = typeof body.config === 'string' ? body.config : await (body.config as File).text();
+      const config = importConfigToml(raw);
       await updateSettings(db, config);
       results.push('config.toml imported successfully');
     } catch (e: any) {
@@ -85,11 +85,11 @@ export async function importToml(c: Context): Promise<Response> {
 
   if (body.apps) {
     try {
-      const tomlStr = typeof body.apps === 'string' ? body.apps : await (body.apps as File).text();
-      const apps = importAppsToml(tomlStr);
+      const raw = typeof body.apps === 'string' ? body.apps : await (body.apps as File).text();
+      const apps = importAppsToml(raw);
       const existingBookmarks = await getLinksByType(db, 'bookmark');
       await updateLinks(db, [...apps, ...existingBookmarks]);
-      results.push(`apps.toml imported: ${apps.length} apps`);
+      results.push(`apps.toml imported: ${apps.length} links`);
     } catch (e: any) {
       results.push(`apps.toml import failed: ${e.message}`);
     }
@@ -97,8 +97,8 @@ export async function importToml(c: Context): Promise<Response> {
 
   if (body.bookmarks) {
     try {
-      const tomlStr = typeof body.bookmarks === 'string' ? body.bookmarks : await (body.bookmarks as File).text();
-      const { categories, links } = importBookmarksToml(tomlStr);
+      const raw = typeof body.bookmarks === 'string' ? body.bookmarks : await (body.bookmarks as File).text();
+      const { categories, links } = importBookmarksToml(raw);
       const existingApps = await getLinksByType(db, 'app');
       await updateCategories(db, categories);
       await updateLinks(db, [...existingApps, ...links]);
