@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@mdi/js": "^7.4.47",
     "hono": "^4.6.5",
     "smol-toml": "^1.6.1"
   },

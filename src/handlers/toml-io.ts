@@ -112,33 +112,81 @@ export async function importToml(c: Context): Promise<Response> {
     return c.text('No files provided. Upload config, apps, and/or bookmarks.', 400);
   }
 
-  return c.html(`<html>
-    <head><meta charset="UTF-8"><title>Import Results</title></head>
-    <body>
-      <h1>Import Results</h1>
-      <ul>${results.map((r) => `<li>${r}</li>`).join('')}</ul>
-      <p><a href="/">Return Home</a></p>
-    </body>
-  </html>`);
+  return c.html(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Import Results</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; max-width: 520px; margin: 60px auto; background: #1a1a1a; color: #FFFDEA; }
+    h1 { margin-bottom: 20px; }
+    li { padding: 4px 0; }
+    .ok { color: #98c379; }
+    .fail { color: #e06c75; }
+    a { color: #5c5c5c; }
+  </style>
+</head>
+<body>
+  <h1>Import Results</h1>
+  <ul>${results.map((r) => `<li class="${r.includes('failed') ? 'fail' : 'ok'}">${r}</li>`).join('')}</ul>
+  <p><a href="/api/config/import">← 继续导入</a></p>
+  <p><a href="/">Return Home</a></p>
+</body>
+</html>`);
 }
 
 /**
  * GET /api/config/import - Show import form
  */
 export function importForm(c: Context): Response {
-  return c.html(`<html>
-    <head><meta charset="UTF-8"><title>Import TOML Data</title>
-    <style>body { font-family: sans-serif; max-width: 600px; margin: 40px auto; } label { display: block; margin: 10px 0; }</style>
-    </head>
-    <body>
-      <h1>Import TOML Data</h1>
-      <form method="POST" action="/api/config/import" enctype="multipart/form-data">
-        <label>config.toml: <input type="file" name="config" accept=".toml" /></label>
-        <label>apps.toml: <input type="file" name="apps" accept=".toml" /></label>
-        <label>bookmarks.toml: <input type="file" name="bookmarks" accept=".toml" /></label>
-        <button type="submit">Import</button>
-      </form>
-      <p><a href="/">Return Home</a></p>
-    </body>
-  </html>`);
+  return c.html(`<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Import TOML Data</title>
+  <link rel="stylesheet" href="/assets/css/base.css">
+  <link rel="stylesheet" href="/assets/css/settings/layout.css">
+  <link rel="stylesheet" href="/assets/css/settings/sidebar.css">
+  <style>
+    .import-page { max-width: 520px; margin: 60px auto; }
+    .import-page h1 { margin-bottom: 24px; font-size: 24px; color: var(--color-primary); }
+    .import-page .form-group { margin-bottom: 20px; }
+    .import-page .form-group label { display: block; margin-bottom: 6px; color: var(--color-primary); }
+    .import-page .form-group input[type=file] {
+      display: block; width: 100%; padding: 10px; border-radius: 4px;
+      background: var(--color-primary); color: var(--color-background); border: none;
+    }
+    .import-page .btn-submit {
+      padding: 10px 24px; border: 1px solid var(--color-accent);
+      background: var(--color-background); color: var(--color-primary);
+      border-radius: 4px; cursor: pointer; font-size: 14px;
+    }
+    .import-page .back-link { margin-top: 24px; }
+    .import-page .back-link a { color: var(--color-accent); }
+  </style>
+</head>
+<body style="--color-background:#1a1a1a;--color-primary:#FFFDEA;--color-accent:#5c5c5c;">
+  <div class="import-page">
+    <h1>Import TOML Data</h1>
+    <form method="POST" action="/api/config/import" enctype="multipart/form-data">
+      <div class="form-group">
+        <label for="f-config">config.toml</label>
+        <input id="f-config" type="file" name="config" accept=".toml" />
+      </div>
+      <div class="form-group">
+        <label for="f-apps">apps.toml</label>
+        <input id="f-apps" type="file" name="apps" accept=".toml" />
+      </div>
+      <div class="form-group">
+        <label for="f-bookmarks">bookmarks.toml</label>
+        <input id="f-bookmarks" type="file" name="bookmarks" accept=".toml" />
+      </div>
+      <button class="btn-submit" type="submit">Import</button>
+    </form>
+    <p class="back-link"><a href="/settings/application">← 返回设置</a></p>
+  </div>
+</body>
+</html>`);
 }
