@@ -1,0 +1,24 @@
+{
+  "name": "flare-workers",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:create": "wrangler d1 create flare-db",
+    "db:migrate:local": "wrangler d1 execute flare-db --local --file=src/db/migrations/0001_initial.sql",
+    "db:migrate:remote": "wrangler d1 execute flare-db --remote --file=src/db/migrations/0001_initial.sql",
+    "db:seed": "wrangler d1 execute flare-db --local --file=src/db/seed.sql",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "hono": "^4.6.5",
+    "smol-toml": "^1.6.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260528.1",
+    "typescript": "^6.0.3",
+    "wrangler": "^4.95.0"
+  }
+}

@@ -1,0 +1,21 @@
+name = "flare"
+main = "src/index.ts"
+compatibility_date = "2024-11-06"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "flare-db"
+database_id = "ccf75439-6804-4242-936c-dd1a72510b05"
+
+[assets]
+directory = "./public"
+
+[vars]
+ENABLE_EDITOR = "true"
+VISIBILITY = "DEFAULT"
+FLARE_USER = "flare"
+FLARE_PASS = "flare123"
+
+# FLARE_USER / FLARE_PASS - set via secrets for production
+# DISABLE_LOGIN - set to "true" to skip auth
