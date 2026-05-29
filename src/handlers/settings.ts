@@ -282,10 +282,7 @@ export async function pageOthers(c: Context): Promise<Response> {
         <p>项目地址：<a href="https://github.com/lurenyang418/flare" target="_blank">lurenyang418/flare</a> </p>
         <p>程序版本：Flare Workers v1.0.0</p>
         <br />
-        <p><a href="/api/config/import">导入数据</a> (TOML 格式)</p>
-        <p><a href="/api/config/export/download?file=config">导出 config.toml</a></p>
-        <p><a href="/api/config/export/download?file=apps">导出 apps.toml</a></p>
-        <p><a href="/api/config/export/download?file=bookmarks">导出 bookmarks.toml</a></p>
+        <p><a href="/api/config/import">导入数据</a> (TOML) &nbsp;|&nbsp; 导出 <a href="/api/config/export/download?file=config">config</a> · <a href="/api/config/export/download?file=apps">apps</a> · <a href="/api/config/export/download?file=bookmarks">bookmarks</a></p>
       </div>
     </form>
   </div>`;
