@@ -33,7 +33,7 @@
 }
 
 #container-bookmakrs .bookmark-group-container .bookmark-list a.bookmark {
-  line-height: 2;
+  line-height: 1.6;
   transition: all 0.25s;
 
   white-space: nowrap;
