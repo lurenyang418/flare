@@ -416,12 +416,16 @@ export function renderEditorPage(
     body {
       --spacing-ui: 10px;
       margin: 20px;
+      min-height: 100vh;
+      background-color: var(--color-background);
+      color: var(--color-primary);
       font-family: Roboto, sans-serif;
       font-size: 14px;
     }
     h1, h2, .notice { color: var(--color-primary); }
     #search-container {
       background-color: #fff;
+      color: #222;
       padding: 10px;
       text-align: right;
     }
