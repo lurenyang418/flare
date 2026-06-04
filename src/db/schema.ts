@@ -96,6 +96,45 @@ export function updateLinks(db: D1Database, links: Bookmark[]): Promise<void> {
   return db.batch(stmts).then(() => undefined);
 }
 
+export function replaceEditorData(
+  db: D1Database,
+  categories: Category[],
+  links: Bookmark[]
+): Promise<void> {
+  const insertCategory = db.prepare(
+    'INSERT INTO categories (id, type, title, sort_order) VALUES (?, ?, ?, ?)'
+  );
+  const insertLink = db.prepare(
+    'INSERT INTO links (type, name, url, icon, desc, private, category_id, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+  );
+  const stmts = [
+    db.prepare('DELETE FROM links'),
+    db.prepare('DELETE FROM categories'),
+    ...categories.map((category, index) =>
+      insertCategory.bind(
+        category.id,
+        category.type,
+        category.title,
+        category.sort_order ?? index
+      )
+    ),
+    ...links.map((link, index) =>
+      insertLink.bind(
+        link.type,
+        link.name,
+        link.url,
+        link.icon,
+        link.desc ?? '',
+        link.private ? 1 : 0,
+        link.category_id ?? null,
+        link.sort_order ?? index
+      )
+    ),
+  ];
+
+  return db.batch(stmts).then(() => undefined);
+}
+
 // -- Metadata -----------------------------------------------------------------
 
 export function getMetadata(db: D1Database, key: string): Promise<string | null> {

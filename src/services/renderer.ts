@@ -380,90 +380,198 @@ export function renderEditorPage(
   apps: Bookmark[],
   data: SettingsPageData
 ): string {
-  const categoriesJSON = JSON.stringify(categories);
-  const allBookmarks = [
-    ...apps.map((a) => ({ ...a, category_id: '_FLARE_FIXED_CATEGORY' })),
-    ...bookmarks,
-  ];
-  const bookmarksJSON = JSON.stringify(allBookmarks);
+  const categoryNames = new Map(categories.map((category) => [category.id, category.title]));
+  const categoriesJSON = serializeForInlineScript(
+    categories.map((category) => ({ ID: category.id, Name: category.title }))
+  );
+  const bookmarksJSON = serializeForInlineScript([
+    ...apps.map((app) => ({
+      Name: app.name,
+      URL: app.url,
+      Category: '[Flare 应用]',
+      Icon: app.icon,
+      Desc: app.desc,
+    })),
+    ...bookmarks.map((bookmark) => ({
+      Name: bookmark.name,
+      URL: bookmark.url,
+      Category: categoryNames.get(bookmark.category_id ?? '') ?? '',
+      Icon: bookmark.icon,
+      Desc: bookmark.desc,
+    })),
+  ]);
 
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="google" content="notranslate">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${data.optionTitle} - Editor</title>
+  <title>${data.optionTitle} - 在线数据编辑</title>
   <link rel="stylesheet" href="/assets/editor/handsontable.full.min.css">
-  <style>body { margin: 20px; font-family: sans-serif; }</style>
-</head>
-<body>
-  <h1>内容编辑</h1>
-  <p><a href="/">← 返回首页</a></p>
-  <div id="categories-table"></div>
-  <div id="bookmarks-table"></div>
-  <button id="btn-save">保存</button>
-  <div id="save-status"></div>
-
-  <script>
-    window.__CATEGORIES__ = ${categoriesJSON};
-    window.__BOOKMARKS__ = ${bookmarksJSON};
-  </script>
   <script src="/assets/editor/handsontable.full.min.js"></script>
+  <script src="/assets/editor/zh-CN.min.js"></script>
+  <style>
+    body {
+      --spacing-ui: 10px;
+      margin: 20px;
+      font-family: Roboto, sans-serif;
+      font-size: 14px;
+    }
+    h1, h2, .notice { color: var(--color-primary); }
+    #search-container {
+      background-color: #fff;
+      padding: 10px;
+      text-align: right;
+    }
+    #save-status { margin-left: 10px; }
+  </style>
+</head>
+<body style="${data.bodyStyle}">
+  <h1>Flare 在线数据编辑</h1>
+  <p class="notice">在表格中更新内容，或通过右键菜单添加新行，然后点击保存数据。</p>
+  <p class="notice">右键菜单支持插入行、撤销、重做、剪切和复制；拖动行头可以调整顺序。</p>
+
+  <h2>分类管理</h2>
+  <div id="container-category"></div>
+  <div class="controls">
+    <button type="button" class="update-data" style="margin-top: 10px;">保存数据</button>
+  </div>
+
+  <h2>应用与书签编辑</h2>
+  <div id="search-container">
+    <span style="float: left; margin: 2px;">
+      <span>高亮筛选:</span>
+      <input type="text" id="search">
+    </span>
+    <button type="button" class="update-data" style="margin: 0 10px;">保存数据</button>
+    <button type="button" id="back-home">返回首页</button>
+    <span id="save-status"></span>
+  </div>
+  <div id="container-bookmarks"></div>
+  <form action="/editor" method="POST" id="form-editor">
+    <input type="hidden" name="categories" id="field-categories">
+    <input type="hidden" name="bookmarks" id="field-bookmarks">
+  </form>
+
   <script>
-    // Minimal Handsontable editor
-    const categoriesContainer = document.getElementById('categories-table');
-    const bookmarksContainer = document.getElementById('bookmarks-table');
-    const saveBtn = document.getElementById('btn-save');
-    const statusDiv = document.getElementById('save-status');
+    const FIXED_APP_CATEGORY = '[Flare 应用]';
+    const CONTEXT_MENU = [
+      'row_above',
+      'row_below',
+      '---------',
+      'undo',
+      'redo',
+      '---------',
+      'cut',
+      'copy'
+    ];
+    let categories = ${categoriesJSON};
+    let bookmarks = ${bookmarksJSON};
+    let bookmarksTable;
 
-    const categoryData = window.__CATEGORIES__.map(c => [c.id, c.title]);
-    const bookmarkData = window.__BOOKMARKS__.map(b => [b.name, b.url, b.category_id, b.icon, b.desc]);
+    function buildBookmarkColumns() {
+      return [
+        { data: 'Name' },
+        { data: 'URL' },
+        {
+          data: 'Category',
+          editor: 'select',
+          selectOptions: [FIXED_APP_CATEGORY].concat(
+            categories.map((category) => category.Name).filter(Boolean)
+          ),
+          allowInvalid: false
+        },
+        { data: 'Icon' },
+        { data: 'Desc' }
+      ];
+    }
 
-    // Categories table
-    const catHot = new Handsontable(categoriesContainer, {
-      data: categoryData,
-      colHeaders: ['ID', 'Name'],
+    function updateBookmarksTable() {
+      if (!bookmarksTable) return;
+      bookmarksTable.updateData(bookmarks);
+      bookmarksTable.updateSettings({ columns: buildBookmarkColumns() });
+    }
+
+    const categoriesTable = new Handsontable(document.getElementById('container-category'), {
+      language: 'zh-CN',
+      data: categories,
+      colHeaders: ['分类名称'],
+      rowHeaders: true,
+      manualRowMove: true,
+      contextMenu: CONTEXT_MENU,
       columns: [
-        { data: 0, type: 'text', readOnly: true },
-        { data: 1, type: 'text' }
+        { data: 'Name' }
       ],
-      minSpareRows: 1,
+      height: 'auto',
+      afterChange(changes) {
+        if (!changes) return;
+        changes.forEach(([, property, oldValue, newValue]) => {
+          if (property !== 'Name' || oldValue === newValue) return;
+          bookmarks.forEach((bookmark) => {
+            if (bookmark.Category === oldValue) bookmark.Category = newValue;
+          });
+        });
+        updateBookmarksTable();
+      },
       licenseKey: 'non-commercial-and-evaluation'
     });
 
-    // Bookmarks table
-    const bmHot = new Handsontable(bookmarksContainer, {
-      data: bookmarkData,
-      colHeaders: ['Name', 'URL', 'Category', 'Icon', 'Desc'],
-      columns: [
-        { data: 0, type: 'text' },
-        { data: 1, type: 'text' },
-        { data: 2, type: 'dropdown', source: ['_FLARE_FIXED_CATEGORY', ...window.__CATEGORIES__.map(c => c.id)] },
-        { data: 3, type: 'text' },
-        { data: 4, type: 'text' }
-      ],
-      minSpareRows: 1,
+    bookmarksTable = new Handsontable(document.getElementById('container-bookmarks'), {
+      language: 'zh-CN',
+      data: bookmarks,
+      colHeaders: ['书签名称', '书签地址', '类型', '图标', '描述'],
+      rowHeaders: true,
+      manualRowMove: true,
+      contextMenu: CONTEXT_MENU,
+      columns: buildBookmarkColumns(),
+      height: 'auto',
+      stretchH: 'all',
+      search: true,
       licenseKey: 'non-commercial-and-evaluation'
     });
 
-    saveBtn.addEventListener('click', async () => {
-      statusDiv.textContent = 'Saving...';
-      const form = new FormData();
-      form.append('categories', catHot.getData().filter(r => r[0] && r[1]).map(r => r.join(',')).join('\\n'));
-      form.append('bookmarks', bmHot.getData().filter(r => r[0] && r[1]).map(r => r.join(',')).join('\\n'));
-      try {
-        const resp = await fetch('/editor', { method: 'POST', body: form });
-        if (resp.ok) {
-          statusDiv.textContent = 'Saved!';
-          location.reload();
-        } else {
-          statusDiv.textContent = 'Save failed.';
-        }
-      } catch (e) {
-        statusDiv.textContent = 'Error: ' + e.message;
-      }
+    Handsontable.dom.addEvent(document.getElementById('search'), 'keyup', function () {
+      bookmarksTable.getPlugin('search').query(this.value);
+      bookmarksTable.render();
+    });
+
+    function bindData() {
+      const options = {
+        bom: false,
+        columnDelimiter: ',',
+        columnHeaders: false,
+        exportHiddenColumns: true,
+        exportHiddenRows: true,
+        rowDelimiter: '\\r\\n',
+        rowHeaders: true
+      };
+      document.getElementById('field-categories').value =
+        categoriesTable.getPlugin('exportFile').exportAsString('csv', options);
+      document.getElementById('field-bookmarks').value =
+        bookmarksTable.getPlugin('exportFile').exportAsString('csv', options);
+    }
+
+    document.querySelectorAll('.update-data').forEach((button) => {
+      button.addEventListener('click', () => {
+        document.getElementById('save-status').textContent = '正在保存...';
+        bindData();
+        document.getElementById('form-editor').submit();
+      });
+    });
+
+    document.getElementById('back-home').addEventListener('click', () => {
+      location.href = '/';
     });
   </script>
 </body>
 </html>`;
+}
+
+function serializeForInlineScript(value: unknown): string {
+  return JSON.stringify(value)
+    .replaceAll('<', '\\u003c')
+    .replaceAll('>', '\\u003e')
+    .replaceAll('&', '\\u0026');
 }

@@ -3,3 +3,9 @@ dist/
 .wrangler/
 *.log
 package-lock.json
+
+# Local environment variables and secrets
+.env*
+.dev.vars*
+!.env.example
+!.dev.vars.example
